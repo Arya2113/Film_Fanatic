@@ -35,6 +35,9 @@
           <li><a href="#all-movies" class="hover:text-blue-300">All Movies</a></li>
           <li><a href="#recommended" class="hover:text-blue-300">Recommended</a></li>
           <li><a href="#contact" class="hover:text-blue-300">Contact</a></li>
+          <a href="login.php" class="bg-white text-blue-900 font-semibold px-4 py-2 rounded-full hover:bg-blue-100 transition">Log In</a>
+          <a href="signup.php" class="border border-white px-4 py-2 rounded-full hover:bg-white hover:text-blue-900 transition">Sign Up</a>
+
         </ul>
       </nav>
     </div>
@@ -52,6 +55,8 @@
         <li><a href="#all-movies" class="hover:text-blue-300">All Movies</a></li>
         <li><a href="#recommended" class="hover:text-blue-300">Recommended</a></li>
         <li><a href="#contact" class="hover:text-blue-300">Contact</a></li>
+        <li><a href="login.php" class="hover:text-blue-300">Log In</a></li>
+        <li><a href="signup.php" class="hover:text-blue-300">Sig Up</a></li>
       </ul>
     </nav>
   </header>
