@@ -38,29 +38,68 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
   
-    function displayMovies(movies) {
-      if (!movies || movies.length === 0) {
-        moviesContainer.innerHTML = '<div class="text-center p-4">No movies found</div>';
-        return;
-      }
-      moviesContainer.innerHTML = movies.map(movie => {
-        const posterUrl = movie.Poster !== 'N/A' ? movie.Poster : '/placeholder.svg?height=300&width=200';
-        return `
-          <div class="movie-card bg-white rounded-lg shadow-md overflow-hidden">
-            <img src="${posterUrl}" alt="${movie.Title}" class="w-full h-48 object-cover">
-            <div class="p-4">
-              <h3 class="font-bold">${movie.Title}</h3>
-              <p class="text-sm text-gray-600">${movie.Type}, ${movie.Year}</p>
-              <button class="mt-2 bg-blue-900 text-white px-3 py-1 rounded text-sm hover:bg-blue-800" 
-                onclick="getMovieDetails('${movie.imdbID}')">
-                View Details
-              </button>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-  
+ function displayMovies(movies) {
+  if (!movies || movies.length === 0) {
+    moviesContainer.innerHTML = '<div class="text-center p-4">No movies found</div>';
+    return;
+  }
+  moviesContainer.innerHTML = movies.map(movie => {
+    const posterUrl = movie.Poster !== 'N/A' ? movie.Poster : '/placeholder.svg?height=300&width=200';
+  return `
+  <div class="movie-card bg-white rounded-lg shadow-md overflow-hidden">
+    <img src="${posterUrl}" alt="${movie.Title}" class="w-full h-48 object-cover">
+    <div class="p-4">
+      <h3 class="font-bold mb-1">${movie.Title}</h3>
+      <p class="text-sm text-gray-600 mb-4">${movie.Type}, ${movie.Year}</p>
+      <div class="flex items-center justify-between">
+        <button class="bg-blue-900 text-white px-3 py-1 rounded text-sm hover:bg-blue-800"
+          onclick="getMovieDetails('${movie.imdbID}')">
+          View Details
+        </button>
+        <button class="add-fav-btn bg-pink-600 text-white px-3 py-1 rounded text-sm hover:bg-pink-800 transition"
+          title="Add to Favourite"
+          data-imdbid="${movie.imdbID}"
+          data-title="${movie.Title.replace(/"/g, '&quot;')}"
+          data-poster="${posterUrl}"
+          data-year="${movie.Year}"
+          data-genre="${movie.Type}">
+          Add to Favourite
+        </button>
+      </div>
+    </div>
+  </div>
+`;
+
+  }).join('');
+
+  // Add event listeners for add to favourite buttons
+  document.querySelectorAll('.add-fav-btn').forEach(btn => {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      const imdb_id = btn.getAttribute('data-imdbid');
+      const title = btn.getAttribute('data-title');
+      const poster = btn.getAttribute('data-poster');
+      const year = btn.getAttribute('data-year');
+      const genre = btn.getAttribute('data-genre');
+      fetch('favorite.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `imdb_id=${encodeURIComponent(imdb_id)}&title=${encodeURIComponent(title)}&poster=${encodeURIComponent(poster)}&year=${encodeURIComponent(year)}&genre=${encodeURIComponent(genre)}`
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'success') {
+          btn.classList.add('bg-pink-800');
+          btn.textContent = 'Favorited!';
+          btn.disabled = true;
+          btn.title = 'Sudah jadi favorit!';
+        } else if (data.status === 'unauthorized') {
+          alert('Silakan login dulu untuk menambah ke favorit!');
+        }
+      });
+    });
+  });
+}
     window.getMovieDetails = function (imdbID) {
       fetch(`https://www.omdbapi.com/?i=${imdbID}&apikey=${apiKey}`)
         .then(response => response.json())

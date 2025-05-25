@@ -1,3 +1,62 @@
+<?php
+session_start();
+require_once __DIR__ . '/controllers/UserController.php';
+require_once __DIR__ . '/controllers/FavoriteController.php';
+
+$controller = new UserController();
+$favoriteController = new FavoriteController();
+
+$user_id = $_SESSION['user_id'] ?? null;
+$action = $_GET['action'] ?? null;
+$id = $_GET['id'] ?? null;
+
+ob_start();
+if ($action) {
+    switch ($action) {
+        case 'user_index':
+            $controller->index(); // tampilkan semua user
+            break;
+        case 'user_create':
+            $controller->create(); // tampilkan form tambah user
+            break;
+        case 'user_store':
+            $controller->store($_POST); // proses tambah user
+            break;
+        case 'user_edit':
+            $controller->edit($id); // tampilkan form edit user
+            break;
+        case 'user_update':
+            $controller->update($id, $_POST); // proses update
+            break;
+        case 'user_delete':
+            $controller->delete($id); // proses delete
+            break;
+        case 'favorite_index':
+        $favoriteController->index($user_id);
+        break;
+    case 'favorite_create':
+        $favoriteController->create();
+        break;
+    case 'favorite_store':
+        $favoriteController->store($user_id, $_POST);
+        break;
+    case 'favorite_show':
+        $favoriteController->show($id, $user_id);
+        break;
+    case 'favorite_edit':
+        $favoriteController->edit($id, $user_id);
+        break;
+    case 'favorite_update':
+        $favoriteController->update($id, $user_id, $_POST);
+        break;
+    case 'favorite_delete':
+        $favoriteController->destroy($id, $user_id);
+        break;
+    }
+}
+$content = ob_get_clean();
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -30,16 +89,19 @@
       </div>
       <!-- Desktop nav -->
       <nav class="hidden md:block">
-        <ul class="flex space-x-6">
-          <li><a href="#top3" class="hover:text-blue-300">My Top 3</a></li>
-          <li><a href="#all-movies" class="hover:text-blue-300">All Movies</a></li>
-          <li><a href="#recommended" class="hover:text-blue-300">Recommended</a></li>
-          <li><a href="#contact" class="hover:text-blue-300">Contact</a></li>
-          <a href="login.php" class="bg-white text-blue-900 font-semibold px-4 py-2 rounded-full hover:bg-blue-100 transition">Log In</a>
-          <a href="signup.php" class="border border-white px-4 py-2 rounded-full hover:bg-white hover:text-blue-900 transition">Sign Up</a>
-
-        </ul>
-      </nav>
+    <ul class="flex space-x-6">
+    <li><a href="#top3" class="hover:text-blue-300">My Top 3</a></li>
+    <li><a href="#all-movies" class="hover:text-blue-300">All Movies</a></li>
+    <li><a href="#recommended" class="hover:text-blue-300">Recommended</a></li>
+    <li><a href="#contact" class="hover:text-blue-300">Contact</a></li>
+    <?php if (isset($_SESSION['user_id'])): ?>
+      <li><a href="views/users/profile.php" class="bg-white text-blue-900 font-semibold px-4 py-2 rounded-full hover:bg-blue-100 transition">Profil</a></li>
+    <?php else: ?>
+      <li><a href="views/auth/login.php" class="bg-white text-blue-900 font-semibold px-4 py-2 rounded-full hover:bg-blue-100 transition">Log In</a></li>
+      <li><a href="views/auth/signup.php" class="border border-white px-4 py-2 rounded-full hover:bg-white hover:text-blue-900 transition">Sign Up</a></li>
+    <?php endif; ?>
+  </ul>
+</nav>
     </div>
     <!-- Mobile Sidebar -->
     <nav id="mobile-menu" class="fixed top-0 left-0 h-full w-64 bg-blue-900 text-white transform 
@@ -55,8 +117,12 @@
         <li><a href="#all-movies" class="hover:text-blue-300">All Movies</a></li>
         <li><a href="#recommended" class="hover:text-blue-300">Recommended</a></li>
         <li><a href="#contact" class="hover:text-blue-300">Contact</a></li>
-        <li><a href="login.php" class="hover:text-blue-300">Log In</a></li>
-        <li><a href="signup.php" class="hover:text-blue-300">Sig Up</a></li>
+        <?php if (isset($_SESSION['user_id'])): ?>
+          <li><a href="views/users/profile.php" class="hover:text-blue-300">Profil</a></li>
+        <?php else: ?>
+          <li><a href="views/auth/login.php" class="hover:text-blue-300">Log In</a></li>
+          <li><a href="views/auth/signup.php" class="hover:text-blue-300">Sign Up</a></li>
+        <?php endif; ?>
       </ul>
     </nav>
   </header>
@@ -197,6 +263,6 @@
     </div>
   </footer>
 
-  <script src="js/script.js"></script>
+  <script src="assets/js/script.js"></script>
 </body>
 </html>
