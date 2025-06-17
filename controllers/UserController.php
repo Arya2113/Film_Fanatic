@@ -44,5 +44,57 @@ class UserController {
         header("Location: index.php");
         exit;
     }
+
+    public function login($data) {
+    session_start();
+    $email = $data['email'];
+    $password = $data['password'];
+    $remember = isset($data['remember']);
+
+    $user = $this->user->getByEmail($email);
+    if ($user && password_verify($password, $user['password'])) {
+        $_SESSION['user_id'] = $user['id'];
+
+        if ($remember) {
+            $token = bin2hex(random_bytes(32));
+            $this->user->updateRememberToken($user['id'], $token);
+            setcookie('rememberme', '', time() - 3600, '/');
+        }
+        header("Location: dashboard.php");
+        exit;
+        } else {
+        // Kirim error ke view atau redirect ke login dengan pesan error
+        header("Location: login.php?error=1");
+        exit;
+        }
+    }
+
+    // Auto-login jika ada cookie remember me
+    public function autoLoginWithRememberMe() {
+    session_start();
+    if (!isset($_SESSION['user_id']) && isset($_COOKIE['rememberme'])) {
+        $token = $_COOKIE['rememberme'];
+        $user = $this->user->getByRememberToken($token);
+        if ($user) {
+            $_SESSION['user_id'] = $user['id'];
+            // Redirect ke dashboard atau halaman yang diinginkan
+            header("Location: dashboard.php");
+            exit;
+        }
+        }
+    }
+
+    // Logout
+    public function logout() {
+    session_start();
+    if (isset($_SESSION['user_id'])) {
+        $this->user->clearRememberToken($_SESSION['user_id']); // hapus token dari database
+    }
+    session_destroy();
+    setcookie('rememberme', '', time() - 3600, '/');
+    header("Location: login.php");
+    exit;
+    }
+
 }
 ?>

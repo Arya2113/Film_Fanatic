@@ -1,3 +1,10 @@
+<?php
+session_start();
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+?>
+
 <h2 class="text-xl font-bold mb-2">Film Favorit Saya</h2>
 <a href="index.php?action=favorite_create" class="bg-blue-900 text-white px-4 py-2 rounded">Tambah Manual</a>
 <table class="table-auto w-full mt-4">
@@ -14,7 +21,10 @@
         <td>
             <a href="index.php?action=favorite_show&id=<?= $fav['id'] ?>">Show</a> |
             <a href="index.php?action=favorite_edit&id=<?= $fav['id'] ?>">Edit</a> |
-            <a href="index.php?action=favorite_delete&id=<?= $fav['id'] ?>" onclick="return confirm('Yakin?')">Delete</a>
+            <form action="index.php?action=favorite_delete&id=<?= $fav['id'] ?>" method="post" style="display:inline" onsubmit="return confirm('Yakin hapus film favorit ini?')">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+                <button type="submit" style="color:red; background:none; border:none; padding:0; cursor:pointer;">Delete</button>
+            </form>
         </td>
     </tr>
     <?php endforeach; ?>

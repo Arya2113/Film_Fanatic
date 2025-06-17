@@ -2,26 +2,42 @@
 require_once __DIR__ . '/../models/Favorite.php';
 
 class FavoriteController {
-    private $favorite;
+    private $favoriteModel;
 
     public function __construct() {
-        $this->favorite = new Favorite();
+        $this->favoriteModel = new Favorite();
     }
 
-    // Read (lihat semua favorit user)
-    public function index($user_id) {
-        $favorites = $this->favorite->all($user_id);
-        include __DIR__ . '/../views/favorites/index.php';
-    }
-
-    // Show form create
-    public function create() {
-        include __DIR__ . '/../views/favorites/create.php';
-    }
-
-    // Store data baru
     public function store($user_id, $data) {
-        $this->favorite->create(
+        session_start();
+
+        if (
+            !isset($data['csrf_token']) ||
+            $data['csrf_token'] !== ($_SESSION['csrf_token'] ?? '')
+        ) {
+            $_SESSION['fav_errors'] = ["CSRF token tidak valid!"];
+            header("Location: ../views/favorite/create.php");
+            exit;
+        }
+        $errors = [];
+
+        if (empty($data['imdb_id']))  $errors[] = "ID film tidak boleh kosong.";
+        if (empty($data['title']))    $errors[] = "Judul film wajib diisi.";
+        if (empty($data['poster']))   $errors[] = "Poster film wajib diisi.";
+        if (empty($data['year']))     $errors[] = "Tahun film wajib diisi.";
+        if (empty($data['genre']))    $errors[] = "Genre wajib diisi.";
+
+        if ($this->favoriteModel->isFavorite($user_id, $data['imdb_id'])) {
+            $errors[] = "Film ini sudah ada di daftar favorit Anda.";
+        }
+
+        if (!empty($errors)) {
+            $_SESSION['fav_errors'] = $errors;
+            header("Location: ../views/favorite/create.php");
+            exit;
+        }
+
+        $this->favoriteModel->create(
             $user_id,
             $data['imdb_id'],
             $data['title'],
@@ -30,34 +46,39 @@ class FavoriteController {
             $data['genre'],
             $data['label'] ?? null
         );
+
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
         header("Location: index.php?action=favorite_index");
-        exit;
     }
 
-    // Show detail favorit
-    public function show($id, $user_id) {
-        $favorite = $this->favorite->find($id, $user_id);
-        include __DIR__ . '/../views/favorites/show.php';
-    }
-
-    // Show form edit
-    public function edit($id, $user_id) {
-        $favorite = $this->favorite->find($id, $user_id);
-        include __DIR__ . '/../views/favorites/edit.php';
-    }
-
-    // Update data
     public function update($id, $user_id, $data) {
-        $this->favorite->update($id, $user_id, $data['label'] ?? '');
-        header("Location: index.php?action=favorite_index");
-        exit;
-    }
+        session_start();
 
-    // Delete
-    public function destroy($id, $user_id) {
-        $this->favorite->delete($id, $user_id);
+        if (
+            !isset($data['csrf_token']) ||
+            $data['csrf_token'] !== ($_SESSION['csrf_token'] ?? '')
+        ) {
+            $_SESSION['fav_errors'] = ["CSRF token tidak valid!"];
+            header("Location: ../views/favorite/edit.php?id=$id");
+            exit;
+        }
+
+        $errors = [];
+
+        if (isset($data['label']) && strlen($data['label']) > 255) {
+            $errors[] = "Label maksimal 255 karakter.";
+        }
+        if (!empty($errors)) {
+            $_SESSION['fav_errors'] = $errors;
+            header("Location: ../views/favorite/edit.php?id=$id");
+            exit;
+        }
+
+        $this->favoriteModel->update($id, $user_id, $data['label']);
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
         header("Location: index.php?action=favorite_index");
-        exit;
     }
 }
 ?>

@@ -46,5 +46,21 @@ class User {
         $stmt->execute([$email]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+
+    public function updateRememberToken($id, $token) {
+        $stmt = $this->conn->prepare("UPDATE users SET remember_token = ? WHERE id = ?");
+        return $stmt->execute([$token, $id]);
+    }
+
+    public function getByRememberToken($token) {
+        $stmt = $this->conn->prepare("SELECT * FROM users WHERE remember_token = ?");
+        $stmt->execute([$token]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function clearRememberToken($id) {
+        $stmt = $this->conn->prepare("UPDATE users SET remember_token = NULL WHERE id = ?");
+        return $stmt->execute([$id]);
+    }
 }
 ?>

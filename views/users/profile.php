@@ -4,6 +4,9 @@ if (!isset($_SESSION['user_id'])) {
     header("Location: ../auth/login.php");
     exit;
 }
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 require_once dirname(__DIR__, 2) . '/models/User.php';
 require_once dirname(__DIR__, 2) . '/models/Favorite.php';
 
@@ -20,21 +23,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_profile'])) {
     $new_name = trim($_POST['name']);
     $new_email = trim($_POST['email']);
     if ($userModel->update($_SESSION['user_id'], $new_name, $new_email)) {
-        $edit_success = "Profil berhasil diubah!";
-        $user = $userModel->find($_SESSION['user_id']); // refresh
+        $_SESSION['flash_message'] = "Profil berhasil diubah!";
+        header("Location: profile.php");
+        exit;
     } else {
-        $edit_success = "Gagal mengubah profil.";
+        $_SESSION['flash_message'] = "Gagal mengubah profil.";
+        header("Location: profile.php");
+        exit;
     }
 }
 
+
 // Handle delete favorite
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_fav_id'])) {
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+      $_SESSION['flash_message'] = "Akses tidak valid! CSRF token salah.";
+      header("Location: profile.php");
+      exit;
+    }
+
     $fav_id = (int)$_POST['delete_fav_id'];
     $favoriteModel->delete($fav_id, $_SESSION['user_id']);
+    $_SESSION['flash_message'] = "Film favorit berhasil dihapus dari daftar!";
+    header("Location: profile.php");
+    exit;
 }
 
 $favorites = $favoriteModel->userFavorites($_SESSION['user_id']);
 ?>
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -55,14 +72,17 @@ $favorites = $favoriteModel->userFavorites($_SESSION['user_id']);
     </div>
   </header>
 
+  <?php if (isset($_SESSION['flash_message'])): ?>
+    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6 text-center max-w-xl mx-auto">
+      <?= $_SESSION['flash_message']; unset($_SESSION['flash_message']); ?>
+    </div>
+  <?php endif; ?>
+
   <!-- Main Content -->
   <main class="flex flex-col items-center py-12 px-2 min-h-[80vh] w-full">
     <!-- Profile Box -->
     <div class="bg-white rounded-xl shadow-md p-8 w-full max-w-md mb-10 border-t-4 border-blue-900 mx-auto">
       <h2 class="text-2xl font-bold mb-6 text-blue-900 text-center">Profil User</h2>
-      <?php if ($edit_success): ?>
-        <div class="mb-3 text-center text-green-600"><?= $edit_success ?></div>
-      <?php endif; ?>
 
       <!-- Info User Static (non-edit) -->
       <div id="profile-static">
@@ -120,11 +140,12 @@ $favorites = $favoriteModel->userFavorites($_SESSION['user_id']);
             </div>
             <form method="POST" class="ml-3">
               <input type="hidden" name="delete_fav_id" value="<?= $fav['id'] ?>">
+              <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
               <button type="submit"
                 onclick="return confirm('Hapus film ini dari favorit?')"
                 class="bg-red-500 hover:bg-red-700 text-white rounded px-3 py-1 text-xs font-semibold ml-2 transition">
                 Hapus
-              </button>
+            </button>
             </form>
           </li>
         <?php endforeach; ?>

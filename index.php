@@ -14,45 +14,46 @@ ob_start();
 if ($action) {
     switch ($action) {
         case 'user_index':
-            $controller->index(); // tampilkan semua user
+            $controller->index(); 
             break;
         case 'user_create':
-            $controller->create(); // tampilkan form tambah user
+            $controller->create();
             break;
         case 'user_store':
-            $controller->store($_POST); // proses tambah user
+            $controller->store($_POST);
             break;
         case 'user_edit':
-            $controller->edit($id); // tampilkan form edit user
+            $controller->edit($id); 
             break;
         case 'user_update':
-            $controller->update($id, $_POST); // proses update
+            $controller->update($id, $_POST); 
             break;
         case 'user_delete':
-            $controller->delete($id); // proses delete
+            $controller->delete($id); 
             break;
+
         case 'favorite_index':
-        $favoriteController->index($user_id);
-        break;
-    case 'favorite_create':
-        $favoriteController->create();
-        break;
-    case 'favorite_store':
-        $favoriteController->store($user_id, $_POST);
-        break;
-    case 'favorite_show':
-        $favoriteController->show($id, $user_id);
-        break;
-    case 'favorite_edit':
-        $favoriteController->edit($id, $user_id);
-        break;
-    case 'favorite_update':
-        $favoriteController->update($id, $user_id, $_POST);
-        break;
-    case 'favorite_delete':
-        $favoriteController->destroy($id, $user_id);
-        break;
-    }
+            $favoriteController->index($user_id);
+            break;
+        case 'favorite_create':
+            $favoriteController->create();
+            break;
+        case 'favorite_store':
+            $favoriteController->store($user_id, $_POST);
+            break;
+        case 'favorite_show':
+            $favoriteController->show($id, $user_id);
+            break;
+        case 'favorite_edit':
+            $favoriteController->edit($id, $user_id);
+            break;
+        case 'favorite_update':
+            $favoriteController->update($id, $user_id, $_POST);
+            break;
+        case 'favorite_delete':
+            $favoriteController->destroy($id, $user_id);
+            break;
+  }
 }
 $content = ob_get_clean();
 ?>
@@ -76,6 +77,7 @@ $content = ob_get_clean();
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
+<input type="hidden" id="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
 
   <!-- Header -->
   <header class="bg-blue-900 text-white p-4 shadow-md relative z-50">
@@ -101,7 +103,7 @@ $content = ob_get_clean();
       <li><a href="views/auth/signup.php" class="border border-white px-4 py-2 rounded-full hover:bg-white hover:text-blue-900 transition">Sign Up</a></li>
     <?php endif; ?>
   </ul>
-</nav>
+  </nav>
     </div>
     <!-- Mobile Sidebar -->
     <nav id="mobile-menu" class="fixed top-0 left-0 h-full w-64 bg-blue-900 text-white transform 
@@ -126,6 +128,18 @@ $content = ob_get_clean();
       </ul>
     </nav>
   </header>
+
+<?php if (isset($_SESSION['flash_message'])): ?>
+  <div id="flash-message" class="mb-4 px-4 py-3 rounded bg-green-100 border border-green-300 text-green-800 max-w-lg mx-auto mt-6 text-center transition-opacity duration-500">
+    <?= $_SESSION['flash_message']; unset($_SESSION['flash_message']); ?>
+  </div>
+<?php endif; ?>
+<?php if (isset($_SESSION['error_message'])): ?>
+  <div id="error-message" class="mb-4 px-4 py-3 rounded bg-red-100 border border-red-300 text-red-800 max-w-lg mx-auto mt-6 text-center transition-opacity duration-500">
+    <?= $_SESSION['error_message']; unset($_SESSION['error_message']); ?>
+  </div>
+<?php endif; ?>
+
 
   <!-- Main -->
   <main class="container mx-auto p-4 flex flex-col md:flex-row">
@@ -157,7 +171,7 @@ $content = ob_get_clean();
             <div class="movie-card bg-white rounded-lg shadow-md overflow-hidden">
                 <img src="/placeholder.svg?height=300&width=200" alt="Movie 3" class="w-full h-48 object-cover">
                 <div class="p-4">
-                    <h3 class="font-bold">The Dark Knight</h3>
+                    <h3 class="font-bold">The Light Knight</h3>
                     <p class="text-sm text-gray-600">Action, Crime, Drama, 2008</p>
                     <div class="flex items-center mt-2">
                         <span class="text-yellow-500">★★★★★</span>
